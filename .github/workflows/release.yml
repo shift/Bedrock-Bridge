@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            label: linux
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            label: macos-aarch64
+          - os: macos-13
+            target: x86_64-apple-darwin
+            label: macos-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: windows
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.label }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Install Linux system dependencies
+        if: matrix.label == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev pkg-config build-essential
+
+      - name: Install cargo-tauri CLI
+        run: cargo install tauri-cli
+
+      - name: Install frontend deps
+        run: bun install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Bedrock Bridge ${{ github.ref_name }}"
+          releaseBody: |
+            See the assets below to download the installer for your platform.
+
+            ## What's Changed
+            See [commit history](https://github.com/shift/Bedrock-Bridge/compare/${{ github.ref_name }}) for details.
+          releaseDraft: true
+          prerelease: false
+          args: --target ${{ matrix.target }}
+
+  build-android:
+    runs-on: ubuntu-latest
+    name: Build android
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: sdkmanager "ndk;27.0.12077973"
+
+      - name: Install cargo-tauri CLI
+        run: cargo install tauri-cli
+
+      - name: Install frontend deps
+        run: bun install
+
+      - name: Setup Android keystore
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > src-tauri/gen/android/keystore.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Build Android APK (signed)
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          cargo tauri android build --apk \
+            --keystore-path src-tauri/gen/android/keystore.jks \
+            --keystore-password "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --signing-key-alias "${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}" \
+            --signing-key-password "${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}"
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Build Android APK (unsigned)
+        if: env.ANDROID_KEYSTORE_BASE64 == ''
+        run: cargo tauri android build --apk
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Rename APK
+        run: |
+          APK_DIR=src-tauri/gen/android/app/build/outputs/apk/universal/release
+          if [ -f "$APK_DIR/app-universal-release.apk" ]; then
+            mv "$APK_DIR/app-universal-release.apk" "$APK_DIR/Bedrock-Bridge-android.apk"
+          elif [ -f "$APK_DIR/app-universal-release-unsigned.apk" ]; then
+            mv "$APK_DIR/app-universal-release-unsigned.apk" "$APK_DIR/Bedrock-Bridge-android.apk"
+          fi
+
+      - name: Upload Android APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/Bedrock-Bridge-android.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
