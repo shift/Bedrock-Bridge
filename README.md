@@ -83,11 +83,13 @@ cargo tauri android build
 
 ### Without Nix
 
+#### Linux (Ubuntu/Debian)
+
 ```bash
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Install system deps (Ubuntu/Debian)
+# Install system deps
 sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
   libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
 
@@ -95,11 +97,51 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
 curl -fsSL https://bun.sh/install | bash
 
 # Build
-bun install
-bun run build
+bun install && bun run build
 cargo install tauri-cli
 cargo tauri build
+# Output: target/release/bundle/deb/*.deb
 ```
+
+#### macOS
+
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install bun
+brew install bun
+
+# Build (no extra system deps needed on macOS)
+bun install && bun run build
+cargo install tauri-cli
+cargo tauri build
+# Output: target/release/bundle/dmg/*.dmg, target/release/bundle/macos/*.app
+```
+
+#### Windows
+
+```powershell
+# Install Rust
+winget install Rustlang.Rustup
+
+# Install bun
+powershell -c "irm bun.sh/install.ps1 | iex"
+
+# Install Visual Studio C++ Build Tools
+# Download from https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# Select "Desktop development with C++" workload
+
+# Build
+bun install && bun run build
+cargo install tauri-cli
+cargo tauri build
+# Output: target/release/bundle/msi/*.msi
+```
+
+### Cross-Compilation
+
+To build for a platform you're not on, use CI (GitHub Actions). The `.github/workflows/ci.yml` can be extended with matrix builds for macOS and Windows. Alternatively, use a macOS/Windows machine or VM.
 
 ## Usage
 

@@ -67,9 +67,18 @@ jobs:
         run: cargo test -p bedrock-bridge-core -p bedrock-bridge-cli
 
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
     needs: [lint, test]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: macos-latest
+            target: macos
+          - os: windows-latest
+            target: windows
     steps:
       - uses: actions/checkout@v4
 
@@ -89,7 +98,8 @@ jobs:
           key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-build-
 
-      - name: Install system dependencies
+      - name: Install Linux system dependencies
+        if: matrix.target == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev pkg-config build-essential
@@ -103,14 +113,30 @@ jobs:
       - name: Build Tauri app
         run: cargo tauri build
 
-      - name: Upload .deb
+      - name: Upload Linux .deb
+        if: matrix.target == 'linux'
         uses: actions/upload-artifact@v4
         with:
           name: bedrock-bridge-linux-deb
           path: target/release/bundle/deb/*.deb
 
-      - name: Upload binary
+      - name: Upload Linux binary
+        if: matrix.target == 'linux'
         uses: actions/upload-artifact@v4
         with:
           name: bedrock-bridge-linux-binary
           path: target/release/bedrock-bridge
+
+      - name: Upload macOS .dmg
+        if: matrix.target == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bedrock-bridge-macos-dmg
+          path: target/release/bundle/dmg/*.dmg
+
+      - name: Upload Windows .msi
+        if: matrix.target == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bedrock-bridge-windows-msi
+          path: target/release/bundle/msi/*.msi
