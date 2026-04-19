@@ -45,7 +45,16 @@ fn test_profiles_add_and_list() {
 
     // Add a profile
     let output = cli_with_store(dir.path())
-        .args(["profiles", "add", "--label", "Test Server", "--host", "10.0.0.1", "--port", "19132"])
+        .args([
+            "profiles",
+            "add",
+            "--label",
+            "Test Server",
+            "--host",
+            "10.0.0.1",
+            "--port",
+            "19132",
+        ])
         .output()
         .expect("run profiles add");
     assert!(output.status.success());
@@ -70,7 +79,14 @@ fn test_profiles_remove() {
 
     // Add then remove
     cli_with_store(dir.path())
-        .args(["profiles", "add", "--label", "To Remove", "--host", "1.2.3.4"])
+        .args([
+            "profiles",
+            "add",
+            "--label",
+            "To Remove",
+            "--host",
+            "1.2.3.4",
+        ])
         .output()
         .expect("add");
 

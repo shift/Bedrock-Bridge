@@ -5,7 +5,11 @@ use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 #[derive(Parser)]
-#[command(name = "bedrock-bridge", version, about = "UDP relay for Minecraft Bedrock Edition")]
+#[command(
+    name = "bedrock-bridge",
+    version,
+    about = "UDP relay for Minecraft Bedrock Edition"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -128,7 +132,10 @@ async fn main() -> Result<()> {
                 let store = get_store()?;
                 let profile = Profile::new(&label, &host, port);
                 store.add(&profile).map_err(|e| anyhow::anyhow!(e))?;
-                println!("✅ Added profile '{}' ({}:{})", profile.label, profile.host, profile.port);
+                println!(
+                    "✅ Added profile '{}' ({}:{})",
+                    profile.label, profile.host, profile.port
+                );
                 println!("   ID: {}", profile.id);
             }
             ProfileActions::Remove { id_or_label } => {
@@ -140,7 +147,10 @@ async fn main() -> Result<()> {
             ProfileActions::Start { id_or_label } => {
                 let store = get_store()?;
                 let profile = find_profile(store.as_ref(), &id_or_label)?;
-                println!("🚀 Starting proxy for '{}' → {}:{}", profile.label, profile.host, profile.port);
+                println!(
+                    "🚀 Starting proxy for '{}' → {}:{}",
+                    profile.label, profile.host, profile.port
+                );
                 run_proxy(&profile.label, &profile.host, profile.port).await?;
             }
         },

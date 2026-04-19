@@ -7,8 +7,7 @@
 /// Magic bytes: 00 ff ff 00 fe fe fe fe fd fd fd fd 12 34 56 78
 
 pub const RAKNET_MAGIC: [u8; 16] = [
-    0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe,
-    0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78,
+    0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78,
 ];
 
 pub const PACKET_UNCONNECTED_PING: u8 = 0x01;
@@ -29,9 +28,7 @@ pub fn build_motd(server_name: &str, server_guid: i64) -> String {
 
 /// Check if a packet is an Unconnected Ping (0x01).
 pub fn is_unconnected_ping(data: &[u8]) -> bool {
-    !data.is_empty()
-        && data[0] == PACKET_UNCONNECTED_PING
-        && data.len() >= 33 // 1 + 8 + 16 + 8
+    !data.is_empty() && data[0] == PACKET_UNCONNECTED_PING && data.len() >= 33 // 1 + 8 + 16 + 8
 }
 
 /// Build an Unconnected Pong response.
@@ -159,7 +156,10 @@ mod tests {
 
         assert_eq!(pong[0], PACKET_UNCONNECTED_PONG);
         assert_eq!(i64::from_be_bytes(pong[1..9].try_into().unwrap()), 42);
-        assert_eq!(i64::from_be_bytes(pong[9..17].try_into().unwrap()), 0xABCDEF01i64);
+        assert_eq!(
+            i64::from_be_bytes(pong[9..17].try_into().unwrap()),
+            0xABCDEF01i64
+        );
         assert_eq!(&pong[17..33], &RAKNET_MAGIC);
         let motd_len = u16::from_be_bytes([pong[33], pong[34]]);
         assert_eq!(motd_len as usize, motd.len());

@@ -2,11 +2,10 @@
 ///
 /// This module is Tauri-independent. Stats are reported via a `tokio::sync::watch` channel.
 /// The caller (CLI or Tauri) consumes stats from the channel.
-
 use dashmap::DashMap;
 use std::net::SocketAddr;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 use tokio::net::UdpSocket;
 use tokio_util::sync::CancellationToken;
@@ -77,10 +76,7 @@ pub const MTU_CAP: u16 = 1400;
 pub fn spawn_proxy(
     profile: Profile,
     cancel: CancellationToken,
-) -> anyhow::Result<(
-    tokio::sync::watch::Receiver<TrafficStats>,
-    Arc<ProxyState>,
-)> {
+) -> anyhow::Result<(tokio::sync::watch::Receiver<TrafficStats>, Arc<ProxyState>)> {
     let state = Arc::new(ProxyState::default());
     let (stats_tx, stats_rx) = tokio::sync::watch::channel(TrafficStats::default());
 
@@ -107,7 +103,10 @@ async fn run_proxy_inner(
     let relay_socket = UdpSocket::bind("0.0.0.0:0").await?;
 
     let relay_addr = relay_socket.local_addr()?;
-    tracing::info!("UDP proxy listening on 0.0.0.0:19132, relay on {}", relay_addr);
+    tracing::info!(
+        "UDP proxy listening on 0.0.0.0:19132, relay on {}",
+        relay_addr
+    );
 
     let remote_addr: SocketAddr = format!("{}:{}", profile.host, profile.port)
         .parse()
@@ -242,7 +241,9 @@ mod tests {
         assert_eq!(state.sessions.len(), 1);
 
         let now = Instant::now();
-        state.sessions.retain(|_, s| now.duration_since(s.last_active).as_secs() < SESSION_TIMEOUT_SECS);
+        state
+            .sessions
+            .retain(|_, s| now.duration_since(s.last_active).as_secs() < SESSION_TIMEOUT_SECS);
         assert!(state.sessions.is_empty());
     }
 

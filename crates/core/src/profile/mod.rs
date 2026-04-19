@@ -42,8 +42,7 @@ impl JsonFileStore {
 
     /// Default store path: ~/.config/bedrock-bridge/profiles.json
     pub fn default_path() -> std::path::PathBuf {
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| std::path::PathBuf::from("."));
+        let config_dir = dirs::config_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
         config_dir.join("bedrock-bridge").join("profiles.json")
     }
 
@@ -58,13 +57,10 @@ impl JsonFileStore {
 
     fn write_profiles(&self, profiles: &[Profile]) -> Result<(), String> {
         if let Some(parent) = self.path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| format!("create dir: {e}"))?;
+            std::fs::create_dir_all(parent).map_err(|e| format!("create dir: {e}"))?;
         }
-        let json = serde_json::to_string_pretty(profiles)
-            .map_err(|e| format!("serialize: {e}"))?;
-        std::fs::write(&self.path, json)
-            .map_err(|e| format!("write {}: {e}", self.path.display()))
+        let json = serde_json::to_string_pretty(profiles).map_err(|e| format!("serialize: {e}"))?;
+        std::fs::write(&self.path, json).map_err(|e| format!("write {}: {e}", self.path.display()))
     }
 }
 
@@ -81,7 +77,8 @@ impl ProfileStore for JsonFileStore {
 
     fn update(&self, profile: &Profile) -> Result<(), String> {
         let mut profiles = self.read_profiles()?;
-        let existing = profiles.iter_mut()
+        let existing = profiles
+            .iter_mut()
             .find(|p| p.id == profile.id)
             .ok_or("profile not found")?;
         *existing = profile.clone();
@@ -100,7 +97,8 @@ impl ProfileStore for JsonFileStore {
 
     fn get(&self, id: &str) -> Result<Profile, String> {
         let profiles = self.read_profiles()?;
-        profiles.into_iter()
+        profiles
+            .into_iter()
             .find(|p| p.id == id)
             .ok_or_else(|| "profile not found".into())
     }

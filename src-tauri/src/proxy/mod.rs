@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::Mutex;
 use tauri::{AppHandle, Emitter, State};
+use tokio::sync::Mutex;
 
 use bedrock_bridge_core::{self as core, TrafficStats};
 
@@ -62,9 +62,16 @@ pub async fn start_proxy(
             let _ = app_handle.emit(
                 "proxy-status",
                 ProxyStatus {
-                    state: if retry_count > 0 { "retrying".into() } else { "starting".into() },
+                    state: if retry_count > 0 {
+                        "retrying".into()
+                    } else {
+                        "starting".into()
+                    },
                     message: if retry_count > 0 {
-                        format!("Reconnecting to {}:{} (attempt {})", host, port, retry_count)
+                        format!(
+                            "Reconnecting to {}:{} (attempt {})",
+                            host, port, retry_count
+                        )
                     } else {
                         format!("Connecting to {}:{}", host, port)
                     },
@@ -148,7 +155,10 @@ pub async fn start_proxy(
                     "proxy-status",
                     ProxyStatus {
                         state: "failed".into(),
-                        message: format!("Failed after {} retries. Click toggle to retry.", max_retries),
+                        message: format!(
+                            "Failed after {} retries. Click toggle to retry.",
+                            max_retries
+                        ),
                         retry_count,
                     },
                 );
@@ -163,7 +173,12 @@ pub async fn start_proxy(
                 "proxy-status",
                 ProxyStatus {
                     state: "retrying".into(),
-                    message: format!("Retrying in {}s (attempt {}/{})", delay.as_secs(), retry_count, max_retries),
+                    message: format!(
+                        "Retrying in {}s (attempt {}/{})",
+                        delay.as_secs(),
+                        retry_count,
+                        max_retries
+                    ),
                     retry_count,
                 },
             );
