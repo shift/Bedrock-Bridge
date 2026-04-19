@@ -234,3 +234,5 @@ GitHub Actions pipeline (`.github/workflows/ci.yml`):
 ## License
 
 AGPL-3.0-only. See [LICENSE](./LICENSE).
+# Test commit for release pipeline
+
