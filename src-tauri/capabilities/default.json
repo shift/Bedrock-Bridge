@@ -1,0 +1,29 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for Bedrock Bridge",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "store:default",
+    "dialog:default",
+    "fs:default",
+    {
+      "identifier": "store:allow-load",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "store:allow-save",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "store:allow-set",
+      "allow": [{ "path": "$APPDATA/**" }]
+    },
+    {
+      "identifier": "store:allow-get",
+      "allow": [{ "path": "$APPDATA/**" }]
+    }
+  ]
+}

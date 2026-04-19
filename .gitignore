@@ -1,0 +1,20 @@
+node_modules/
+dist/
+target/
+.direnv/
+*.local
+.pi/
+.engram/
+*.swp
+*.swo
+*~
+flake.lock
+
+# Android build artifacts
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/build/
+src-tauri/gen/android/buildSrc/.gradle/
+src-tauri/gen/android/buildSrc/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/local.properties
+src-tauri/Cargo.lock

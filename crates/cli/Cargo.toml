@@ -1,0 +1,21 @@
+[package]
+name = "bedrock-bridge-cli"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[[bin]]
+name = "bedrock-bridge"
+path = "src/main.rs"
+
+[dependencies]
+bedrock-bridge-core = { path = "../core" }
+tokio = { version = "1", features = ["net", "sync", "rt-multi-thread", "macros", "time", "signal"] }
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"
+tokio-util = { version = "0.7", features = ["rt"] }
+
+[dev-dependencies]
+tempfile = "3"

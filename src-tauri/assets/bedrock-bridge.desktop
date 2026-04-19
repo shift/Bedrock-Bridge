@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Bedrock Bridge
+Comment=UDP relay for Minecraft Bedrock Edition
+Exec=bedrock-bridge
+Icon=bedrock-bridge
+Terminal=false
+Categories=Network;Game;
+StartupNotify=false
