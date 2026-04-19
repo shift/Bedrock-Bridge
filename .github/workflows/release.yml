@@ -111,22 +111,19 @@ jobs:
       - name: Install frontend deps
         run: bun install
 
-      - name: Build Android APK
+      - name: Configure Android signing
         run: |
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/gen/android/release.keystore
-            cargo tauri android build --apk \
-              --keystore-path src-tauri/gen/android/release.keystore \
-              --keystore-password "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-              --signing-key-alias "${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}" \
-              --signing-key-password "${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}"
-          else
-            cargo tauri android build --apk \
-              --keystore-path src-tauri/gen/android/debug.keystore \
-              --keystore-password android \
-              --signing-key-alias debug \
-              --signing-key-password android
+            cat > src-tauri/gen/android/keystore.properties <<EOF
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          password=${{ secrets.ANDROID_KEY_PASSWORD }}
+          storeFile=release.keystore
+          EOF
           fi
+
+      - name: Build Android APK
+        run: cargo tauri android build --apk
 
       - name: Rename APK
         run: |
