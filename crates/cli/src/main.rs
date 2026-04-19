@@ -122,7 +122,9 @@ async fn main() -> Result<()> {
                 if profiles.is_empty() {
                     println!("No profiles saved.");
                 } else {
-                    println!("{:<36} {:<20} {:<20} {}", "ID", "Label", "Host", "Port");
+                    println!(
+                        "ID                                   Label                Host                Port"
+                    );
                     for p in &profiles {
                         println!("{:<36} {:<20} {:<20} {}", p.id, p.label, p.host, p.port);
                     }

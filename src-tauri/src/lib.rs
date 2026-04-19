@@ -36,11 +36,11 @@ pub fn run() {
             #[cfg(desktop)]
             {
                 let args: Vec<String> = std::env::args().collect();
-                if args.contains(&"--hidden".to_string()) {
-                    if let Some(w) = app.get_webview_window("main") {
-                        let _ = w.hide();
-                        tracing::info!("Started hidden (--hidden flag)");
-                    }
+                if args.contains(&"--hidden".to_string())
+                    && let Some(w) = app.get_webview_window("main")
+                {
+                    let _ = w.hide();
+                    tracing::info!("Started hidden (--hidden flag)");
                 }
             }
 

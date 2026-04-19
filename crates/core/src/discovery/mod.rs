@@ -5,7 +5,6 @@
 /// - 0x1c Unconnected Pong: [1 byte id] [8 bytes timestamp] [8 bytes server_guid] [16 bytes magic] [2 bytes motd_len] [motd bytes]
 ///
 /// Magic bytes: 00 ff ff 00 fe fe fe fe fd fd fd fd 12 34 56 78
-
 pub const RAKNET_MAGIC: [u8; 16] = [
     0x00, 0xff, 0xff, 0x00, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfd, 0xfd, 0x12, 0x34, 0x56, 0x78,
 ];
