@@ -34,6 +34,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Setting version to $VERSION"
+          # Update tauri.conf.json
+          sed -i 's/"version": "[^"]*"/"version": "'$VERSION'"/' src-tauri/tauri.conf.json
+          # Update package.json
+          sed -i 's/"version": "[^"]*"/"version": "'$VERSION'"/' package.json
+          # Update Cargo.toml
+          sed -i 's/^version = "[^"]*"/version = "'$VERSION'"/' src-tauri/Cargo.toml
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -81,6 +93,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Setting version to $VERSION"
+          sed -i 's/"version": "[^"]*"/"version": "'$VERSION'"/' src-tauri/tauri.conf.json
+          sed -i 's/"version": "[^"]*"/"version": "'$VERSION'"/' package.json
+          sed -i 's/^version = "[^"]*"/version = "'$VERSION'"/' src-tauri/Cargo.toml
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
