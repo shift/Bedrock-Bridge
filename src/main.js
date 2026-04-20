@@ -45,10 +45,7 @@ function updateHeader() {
   const btn = document.getElementById("header-settings");
   if (btn) {
     btn.textContent = currentView === "settings" ? "← Back" : "⚙️";
-    btn.onclick = () => {
-      currentView = currentView === "settings" ? "list" : "settings";
-      render();
-    };
+    btn.dataset.action = "settings";
   }
 }
 
@@ -204,18 +201,18 @@ function renderList() {
   const profileCards = profiles
     .map(
       (p) => `
-    <div class="profile-card">
+    <div class="profile-card" data-profile-id="${p.id}">
       <div class="profile-info">
         <div class="profile-label">${esc(p.label)}</div>
         <div class="profile-host">${esc(p.host)}:${p.port}</div>
       </div>
       <label class="toggle">
         <input type="checkbox" ${activeProfileId === p.id ? "checked" : ""}
-          onchange="window.__toggle('${p.id}')" />
+          data-action="toggle" data-id="${p.id}" />
         <span class="slider"></span>
       </label>
-      <button class="btn btn-ghost" onclick="window.__edit('${p.id}')">✏️</button>
-      <button class="btn btn-ghost" onclick="window.__delete('${p.id}')">🗑️</button>
+      <button class="btn btn-ghost" data-action="edit" data-id="${p.id}">✏️</button>
+      <button class="btn btn-ghost" data-action="delete" data-id="${p.id}">🗑️</button>
     </div>
   `
     )
@@ -232,7 +229,7 @@ function renderList() {
   mainContent.innerHTML = `
     ${statusHtml}
     ${profileCards}
-    <button class="add-btn" onclick="window.__add()">+ Add Server Profile</button>
+    <button class="add-btn" data-action="add">+ Add Server Profile</button>
     ${trafficHtml}
   `;
 
@@ -294,18 +291,18 @@ function renderForm() {
       <input id="f-port" type="number" placeholder="19132" value="${p ? p.port : "19132"}" />
     </div>
     <div class="form-actions">
-      <button class="btn btn-ghost" onclick="window.__cancel()">Cancel</button>
-      <button class="btn btn-primary" onclick="window.__save()">Save</button>
+      <button class="btn btn-ghost" data-action="cancel">Cancel</button>
+      <button class="btn btn-primary" data-action="save">Save</button>
     </div>
   `;
 
   // Keyboard shortcuts for form
   const handleKey = (e) => {
-    if (e.key === "Escape") { window.__cancel(); }
-    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") { window.__save(); }
+    if (e.key === "Escape") { handleAction("cancel"); }
+    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") { handleAction("save"); }
   };
-  mainContent.removeEventListener("keydown", window.__formKeyHandler);
-  window.__formKeyHandler = handleKey;
+  mainContent.removeEventListener("keydown", mainContent._formKeyHandler);
+  mainContent._formKeyHandler = handleKey;
   mainContent.addEventListener("keydown", handleKey);
   document.getElementById("f-label").focus();
 }
@@ -321,7 +318,7 @@ function renderSettings() {
         </div>
         <label class="toggle">
           <input type="checkbox" ${isLightTheme() ? "checked" : ""}
-            onchange="window.__toggleTheme()" />
+            data-action="toggleTheme" />
           <span class="slider"></span>
         </label>
       </div>
@@ -332,7 +329,7 @@ function renderSettings() {
         </div>
         <label class="toggle">
           <input type="checkbox" id="autostart-toggle" ${autostartChecked}
-            onchange="window.__toggleAutostart(this.checked)" />
+            data-action="toggleAutostart" />
           <span class="slider"></span>
         </label>
       </div>
@@ -341,14 +338,14 @@ function renderSettings() {
           <div class="settings-item-label">Export Profiles</div>
           <div class="settings-item-desc">Save profiles to a JSON file</div>
         </div>
-        <button class="btn btn-ghost" onclick="window.__export()">📦</button>
+        <button class="btn btn-ghost" data-action="export">📦</button>
       </div>
       <div class="settings-item">
         <div>
           <div class="settings-item-label">Import Profiles</div>
           <div class="settings-item-desc">Load profiles from a JSON file</div>
         </div>
-        <button class="btn btn-ghost" onclick="window.__import()">📂</button>
+        <button class="btn btn-ghost" data-action="import">📂</button>
       </div>
     </div>
   `;
@@ -358,37 +355,54 @@ function renderSettings() {
     if (el) el.checked = enabled;
   }).catch(() => {});
 }
-window.__toggle = (id) => toggleProfile(id);
-window.__add = () => {
-  editingProfile = null;
-  currentView = "form";
-  render();
-};
-window.__edit = (id) => {
-  editingProfile = profiles.find((p) => p.id === id);
-  currentView = "form";
-  render();
-};
-window.__delete = (id) => {
-  if (confirm("Delete this profile?")) deleteProfile(id);
-};
-window.__cancel = () => {
-  editingProfile = null;
-  currentView = "list";
-  render();
-};
-window.__toggleTheme = () => {
-  toggleTheme();
-  render();
-};
-window.__toggleAutostart = async (enabled) => {
-  try {
-    await invoke("set_autostart", { enable: enabled });
-  } catch (e) {
-    alert("Failed to set autostart: " + e);
+// --- Event delegation (works reliably on mobile WebView) ---
+function handleAction(action, id, el) {
+  switch (action) {
+    case "toggle":
+      toggleProfile(id);
+      break;
+    case "add":
+      editingProfile = null;
+      currentView = "form";
+      render();
+      break;
+    case "edit":
+      editingProfile = profiles.find((p) => p.id === id);
+      currentView = "form";
+      render();
+      break;
+    case "delete":
+      if (confirm("Delete this profile?")) deleteProfile(id);
+      break;
+    case "cancel":
+      editingProfile = null;
+      currentView = "list";
+      render();
+      break;
+    case "save":
+      doSave();
+      break;
+    case "toggleTheme":
+      toggleTheme();
+      render();
+      break;
+    case "toggleAutostart":
+      doToggleAutostart(el.checked);
+      break;
+    case "export":
+      doExport();
+      break;
+    case "import":
+      doImport();
+      break;
+    case "settings":
+      currentView = currentView === "settings" ? "list" : "settings";
+      render();
+      break;
   }
-};
-window.__save = async () => {
+}
+
+async function doSave() {
   const label = document.getElementById("f-label").value.trim();
   const host = document.getElementById("f-host").value.trim();
   const port = parseInt(document.getElementById("f-port").value, 10);
@@ -425,9 +439,17 @@ window.__save = async () => {
   editingProfile = null;
   currentView = "list";
   await loadProfiles();
-};
+}
 
-window.__export = async () => {
+async function doToggleAutostart(enabled) {
+  try {
+    await invoke("set_autostart", { enable: enabled });
+  } catch (e) {
+    alert("Failed to set autostart: " + e);
+  }
+}
+
+async function doExport() {
   try {
     const json = await invoke("export_profiles");
     const path = await save({
@@ -441,9 +463,9 @@ window.__export = async () => {
   } catch (e) {
     alert("Export failed: " + e);
   }
-};
+}
 
-window.__import = async () => {
+async function doImport() {
   try {
     const path = await open({
       filters: [{ name: "JSON", extensions: ["json"] }],
@@ -459,7 +481,26 @@ window.__import = async () => {
   } catch (e) {
     alert("Import failed: " + e);
   }
-};
+}
+
+// Attach delegated listeners to both main content and header
+[mainContent, document.querySelector("header")].forEach((el) => {
+  if (!el) return;
+  el.addEventListener("click", (e) => {
+    const target = e.target.closest("[data-action]");
+    if (!target) return;
+    const action = target.dataset.action;
+    const id = target.dataset.id;
+    handleAction(action, id, target);
+  });
+  el.addEventListener("change", (e) => {
+    const target = e.target.closest("[data-action]");
+    if (!target) return;
+    const action = target.dataset.action;
+    const id = target.dataset.id;
+    handleAction(action, id, target);
+  });
+});
 
 function updateTitle() {
   const p = profiles.find((p) => p.id === activeProfileId);
