@@ -27,6 +27,7 @@ pub fn run() {
             proxy::get_traffic_stats,
             settings::set_autostart,
             settings::is_autostart_enabled,
+            settings::is_autostart_supported,
         ])
         .setup(|app| {
             tracing_subscriber::fmt::init();

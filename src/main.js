@@ -322,7 +322,7 @@ function renderSettings() {
           <span class="slider"></span>
         </label>
       </div>
-      <div class="settings-item">
+      <div class="settings-item" id="autostart-setting">
         <div>
           <div class="settings-item-label">Start on Login</div>
           <div class="settings-item-desc">Launch Bedrock Bridge automatically</div>
@@ -349,11 +349,20 @@ function renderSettings() {
       </div>
     </div>
   `;
-  // Load autostart state async
-  invoke("is_autostart_enabled").then((enabled) => {
-    const el = document.getElementById("autostart-toggle");
-    if (el) el.checked = enabled;
-  }).catch(() => {});
+  // Load autostart state + hide on unsupported platforms
+  invoke("is_autostart_supported")
+    .then((supported) => {
+      if (!supported) {
+        const el = document.getElementById("autostart-setting");
+        if (el) el.style.display = "none";
+        return;
+      }
+      return invoke("is_autostart_enabled").then((enabled) => {
+        const el = document.getElementById("autostart-toggle");
+        if (el) el.checked = enabled;
+      });
+    })
+    .catch(() => {});
 }
 // --- Event delegation (works reliably on mobile WebView) ---
 function handleAction(action, id, el) {

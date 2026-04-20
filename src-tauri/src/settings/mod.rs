@@ -1,7 +1,18 @@
 use std::path::PathBuf;
 
+/// Whether autostart is supported on this platform.
+/// Only Linux/macOS/Windows have a config dir for autostart entries.
+pub fn is_supported() -> bool {
+    dirs::config_dir().is_some()
+}
+
+#[tauri::command]
+pub fn is_autostart_supported() -> bool {
+    is_supported()
+}
+
 fn autostart_dir() -> Result<PathBuf, String> {
-    let config = dirs::config_dir().ok_or("cannot find config directory")?;
+    let config = dirs::config_dir().ok_or("autostart not supported on this platform")?;
     Ok(config.join("autostart"))
 }
 

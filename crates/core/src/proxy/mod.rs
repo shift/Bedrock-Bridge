@@ -108,11 +108,16 @@ async fn run_proxy_inner(
         relay_addr
     );
 
-    let remote_addr: SocketAddr = format!("{}:{}", profile.host, profile.port)
-        .parse()
-        .map_err(|e| anyhow::anyhow!("invalid remote addr {}: {e}", profile.host))?;
+    let remote_addr: SocketAddr = tokio::net::lookup_host(format!("{}:{}", profile.host, profile.port))
+        .await
+        .map_err(|e| anyhow::anyhow!("DNS lookup failed for {}:{}: {e}", profile.host, profile.port))?
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("no address found for {}:{}", profile.host, profile.port))?;
 
-    tracing::info!("Forwarding to {} (label: {})", remote_addr, profile.label);
+    tracing::info!(
+        "Resolved {}:{} → {} (label: {})",
+        profile.host, profile.port, remote_addr, profile.label
+    );
 
     let mut local_buf = [0u8; 2048];
     let mut relay_buf = [0u8; 2048];
